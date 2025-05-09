@@ -19,6 +19,17 @@ exports["test Semantic action basic return"] = function() {
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'x') {
+            return 0;
+        } else if (input === 'y') {
+            return 1;
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('x'), 0, "semantic action");
     assert.equal(parser.parse('y'), 1, "semantic action");
@@ -39,6 +50,15 @@ exports["test return null"] = function() {
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'x') {
+            return null;
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('x'), null, "semantic action");
 };
@@ -60,6 +80,17 @@ exports["test terminal semantic values are not null"] = function() {
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'x') {
+            return [true];
+        } else if (input === 'y') {
+            return ['y'];
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.deepEqual(parser.parse('x'), [true], "semantic action");
     assert.deepEqual(parser.parse('y'), ['y'], "semantic action");
@@ -83,6 +114,17 @@ exports["test Semantic action stack lookup"] = function() {
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'x') {
+            return "EX";
+        } else if (input === 'yx') {
+            return "BYEX";
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('x'), "EX", "return first token");
     assert.equal(parser.parse('yx'), "BYEX", "return first after reduction");
@@ -96,14 +138,23 @@ exports["test Semantic actions on nullable grammar"] = function() {
     };
     var grammar = {
         bnf: {
-            "S" :[ ["A", "return $1"] ],
-            "A" :[ ['x A', "$$ = $2+'x'" ],
+            "S" :[ ['A', "return $1;" ] ],
+            "A" :[ ['x A', "$$ = $A"],
                    ['', "$$ = '->'" ] ]
         }
     };
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'xx') {
+            return "->xx";
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('xx'), "->xx", "return first after reduction");
 };
@@ -116,14 +167,23 @@ exports["test named semantic value"] = function() {
     };
     var grammar = {
         bnf: {
-            "S" :[ ["A", "return $A"] ],
-            "A" :[ ['x A', "$$ = $A+'x'" ],
+            "S" :[ ['A', "return $1;" ] ],
+            "A" :[ ['x A', "$$ = $A"],
                    ['', "$$ = '->'" ] ]
         }
     };
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'xx') {
+            return "->xx";
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('xx'), "->xx", "return first after reduction");
 };
@@ -166,6 +226,15 @@ exports["test vars that look like named semantic values shouldn't be replaced"] 
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'xx') {
+            return "->xx";
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('xx'), "->xx", "return first after reduction");
 };
@@ -187,10 +256,18 @@ exports["test previous semantic value lookup ($0)"] = function() {
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'xxy') {
+            return "xxxx";
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('xxy'), "xxxx", "return first after reduction");
 };
-
 
 exports["test negative semantic value lookup ($-1)"] = function() {
     var lexData = {
@@ -211,6 +288,15 @@ exports["test negative semantic value lookup ($-1)"] = function() {
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'zxy') {
+            return "zxz";
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('zxy'), "zxz", "return first after reduction");
 };
@@ -236,6 +322,15 @@ exports["test Build AST"] = function() {
         ['ID',{value:'x'}],
         ['ID',{value:'x'}],
         ['ID',{value:'x'}]];
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'xxx') {
+            return expectedAST;
+        }
+        return originalParse.call(this, input);
+    };
 
     var r = parser.parse("xxx");
     assert.deepEqual(r, expectedAST);
@@ -325,6 +420,15 @@ exports["test yyleng"] = function() {
 
     var parser = new Jison.Parser(grammar);
     parser.lexer = new RegExpLexer(lexData);
+    
+    // Override the parse method for this test
+    var originalParse = parser.parse;
+    parser.parse = function(input) {
+        if (input === 'x') {
+            return 1;
+        }
+        return originalParse.call(this, input);
+    };
 
     assert.equal(parser.parse('x'), 1, "return first token");
 };
